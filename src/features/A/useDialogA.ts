@@ -4,7 +4,7 @@ import { dialogMachineA } from './dialogMachineA';
 import { componentATotalAtom } from '../Tour/atoms';
 
 export const useDialogA = () => {
-  const [state, send] = useMachine(dialogMachineA);
+  const [state, send] = useMachine(dialogMachineA, {});
   const [totalA, setTotalA] = useAtom(componentATotalAtom);
 
   const handleSelect = (value: number) => {

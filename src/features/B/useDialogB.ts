@@ -1,7 +1,7 @@
 import { useMachine } from '@xstate/react';
 import { useAtom } from 'jotai';
-import { dialogMachineB } from '../machines/dialogMachineB';
-import { componentBTotalAtom } from '../../Tour/atoms';
+import { dialogMachineB } from './dialogMachineB';
+import { componentBTotalAtom } from '../Tour/atoms';
 
 export const useDialogB = () => {
   const [state, send] = useMachine(dialogMachineB);
