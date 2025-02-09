@@ -1,14 +1,5 @@
 import { createMachine, assign } from 'xstate';
 
-interface DialogContext {
-  count: number;
-  total: number;
-}
-
-type DialogEvent = 
-  | { type: 'OPEN' }
-  | { type: 'SELECT'; value: number }
-  | { type: 'RESET' };
 
 export const dialogMachineA = createMachine({
   id: 'dialogA',
@@ -23,28 +14,31 @@ export const dialogMachineA = createMachine({
         OPEN: {
           target: 'open',
           actions: assign({
-            count: (_: DialogContext) => 0,
-            total: (_: DialogContext) => 0
-          })
+            count: () => 0,
+            total: () => 0
+          } as const)
         }
       }
     },
     open: {
       on: {
-        SELECT: [{
-          target: 'complete',
-          guard: (context) => context.count >= 2,
-          actions: assign({
-            count: (context: DialogContext) => context.count + 1,
-            total: (context: DialogContext, event: { value: number }) => context.total + event.value
-          })
-        }, {
-          target: 'open',
-          actions: assign({
-            count: (context: DialogContext) => context.count + 1,
-            total: (context: DialogContext, event: { value: number }) => context.total + event.value
-          })
-        }]
+        SELECT: [
+          {
+            target: 'complete',
+            guard: ({ context }) => context.count >= 2,
+            actions: assign({
+              count: ({ context }) => context.count + 1,
+              total: ({ context, event }) => context.total + event.value
+            } as const)
+          },
+          {
+            target: 'open',
+            actions: assign({
+              count: ({ context }) => context.count + 1,
+              total: ({ context, event }) => context.total + event.value
+            } as const)
+          }
+        ]
       }
     },
     complete: {
@@ -52,11 +46,11 @@ export const dialogMachineA = createMachine({
         RESET: {
           target: 'closed',
           actions: assign({
-            count: (_: DialogContext) => 0,
-            total: (_: DialogContext) => 0
-          })
+            count: () => 0,
+            total: () => 0
+          } as const)
         }
       }
     }
   }
-} satisfies import('xstate').StateMachine<DialogContext, any, DialogEvent>); 
+});
