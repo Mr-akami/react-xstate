@@ -1,16 +1,14 @@
+// components/TourComponent.tsx
 import React from 'react';
 import { useTour } from './useTour';
 
 const TourComponent: React.FC = () => {
-  const { startTour, isTourActive } = useTour();
+  const { startTour, isInComponentA, isInComponentB, completeA, completeB, componentARef, componentBRef } = useTour();
 
-  return (
-    <div>
-      <button onClick={startTour} disabled={isTourActive}>
-        {isTourActive ? 'Tour in Progress...' : 'Start Tour'}
-      </button>
-    </div>
-  );
+  if (isInComponentA && componentARef) componentARef.send({ type: 'OPEN' });
+  if (isInComponentB && componentBRef) componentBRef.send({ type: 'OPEN' });
+
+  return <button onClick={startTour}>Start Tour</button>;
 };
 
-export default TourComponent; 
+export default TourComponent;

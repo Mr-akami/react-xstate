@@ -11,7 +11,7 @@ export const useTour = () => {
     startTour: () => send({ type: 'START' }),
     completeA: () => send({ type: 'COMPLETE_A' }),
     completeB: () => send({ type: 'COMPLETE_B' }),
-    componentA: state.context.componentA,
-    componentB: state.context.componentB
+    componentARef: state.context.componentA,
+    componentBRef: state.context.componentB
   };
 }; 
