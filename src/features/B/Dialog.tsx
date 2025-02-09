@@ -6,6 +6,8 @@ interface DialogProps {
   onSelect: (value: number) => void;
   onSave: () => void;
   title: string;
+  count?: number;
+  total?: number;
 }
 
 export const Dialog: React.FC<DialogProps> = ({
@@ -14,6 +16,8 @@ export const Dialog: React.FC<DialogProps> = ({
   onSelect,
   onSave,
   title,
+  count = 0,
+  total = 0,
 }) => {
   if (!isOpen && !isComplete) return null;
 
@@ -31,6 +35,7 @@ export const Dialog: React.FC<DialogProps> = ({
     return (
       <div style={dialogStyle}>
         <h3>Complete!</h3>
+        <p>Total: {total}</p>
         <button onClick={onSave}>Save</button>
       </div>
     );
@@ -39,6 +44,8 @@ export const Dialog: React.FC<DialogProps> = ({
   return (
     <div style={dialogStyle}>
       <h3>{title}</h3>
+      <p>Count: {count}/3</p>
+      <p>Current Total: {total}</p>
       <div style={{ display: 'flex', gap: '10px' }}>
         <button onClick={() => onSelect(0)}>0</button>
         <button onClick={() => onSelect(1)}>1</button>
