@@ -1,5 +1,5 @@
-import { createMachine, assign, AnyActorRef } from 'xstate';
-import { dialogActor } from '../A/useDialogA';
+import { createMachine, assign, AnyActorRef, fromCallback } from 'xstate';
+import { dialogActorA } from '../A/useDialogA';
 import { dialogActorB } from '../B/useDialogB';
 
 interface TourContext {
@@ -47,18 +47,20 @@ export const tourMachine = createMachine({
       }
     },
     componentA: {
-      entry: [
-        assign({
-          componentA: () => dialogActor
-        }),
-        ({ self }) => {
-          dialogActor.subscribe((state) => {
+      entry: assign({
+        componentA: () => dialogActorA
+      }),
+      invoke: {
+        id: 'dialogASubscription',
+        src: fromCallback(({ sendBack }) => {
+          const subscription = dialogActorA.subscribe((state) => {
             if (state.matches('complete')) {
-              self.send({ type: 'COMPLETE_A' });
+              sendBack({ type: 'COMPLETE_A' });
             }
           });
-        }
-      ],
+          return subscription.unsubscribe;
+        })
+      },
       on: {
         COMPLETE_A: { 
           target: 'componentB', 
@@ -67,18 +69,20 @@ export const tourMachine = createMachine({
       }
     },
     componentB: {
-      entry: [
-        assign({
-          componentB: () => dialogActorB
-        }),
-        ({ self }) => {
-          dialogActorB.subscribe((state) => {
+      entry: assign({
+        componentB: () => dialogActorB
+      }),
+      invoke: {
+        id: 'dialogBSubscription',
+        src: fromCallback(({ sendBack }) => {
+          const subscription = dialogActorB.subscribe((state) => {
             if (state.matches('complete')) {
-              self.send({ type: 'COMPLETE_B' });
+              sendBack({ type: 'COMPLETE_B' });
             }
           });
-        }
-      ],
+          return subscription.unsubscribe;
+        })
+      },
       on: {
         COMPLETE_B: { 
           target: 'idle', 

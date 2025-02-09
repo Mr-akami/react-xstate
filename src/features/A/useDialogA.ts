@@ -4,24 +4,24 @@ import { dialogMachineA } from './dialogMachineA';
 import { componentATotalAtom } from '../Tour/atoms';
 import { createActor } from 'xstate';
 
-export const dialogActor = createActor(dialogMachineA).start();
+export const dialogActorA = createActor(dialogMachineA).start();
 
 export const useDialogA = () => {
   const [totalA, setTotalA] = useAtom(componentATotalAtom);
 
-  const isOpen = useSelector(dialogActor, state => state.matches('open'));
-  const isComplete = useSelector(dialogActor, state => state.matches('complete'));
-  const count = useSelector(dialogActor, state => state.context.count);
-  const currentTotal = useSelector(dialogActor, state => state.context.total);
+  const isOpen = useSelector(dialogActorA, state => state.matches('open'));
+  const isComplete = useSelector(dialogActorA, state => state.matches('complete'));
+  const count = useSelector(dialogActorA, state => state.context.count);
+  const currentTotal = useSelector(dialogActorA, state => state.context.total);
   
 
   const handleSelect = (value: number) => {
-    dialogActor.send({ type: 'SELECT', value });
+    dialogActorA.send({ type: 'SELECT', value });
   };
 
   const handleSave = () => {
     setTotalA(currentTotal);
-    dialogActor.send({ type: 'RESET' });
+    dialogActorA.send({ type: 'RESET' });
   };
 
   return {
@@ -29,7 +29,7 @@ export const useDialogA = () => {
     isComplete,
     handleSelect,
     handleSave,
-    openDialog: () => dialogActor.send({ type: 'OPEN' }),
+    openDialog: () => dialogActorA.send({ type: 'OPEN' }),
     total: totalA,
     count,
     currentTotal
