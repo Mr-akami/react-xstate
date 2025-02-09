@@ -61,7 +61,7 @@ export const tourMachine = createMachine({
         id: 'dialogASubscription',
         src: fromCallback(({ sendBack }) => {
           const subscription = dialogActorA.subscribe((state) => {
-            if (state.matches('complete')) {
+            if (state.matches('closed')) {
               sendBack({ type: 'COMPLETE_A' });
             }
           });
@@ -89,10 +89,12 @@ export const tourMachine = createMachine({
       invoke: {
         id: 'dialogBSubscription',
         src: fromCallback(({ sendBack }) => {
+          let previousState = dialogActorB.getSnapshot();
           const subscription = dialogActorB.subscribe((state) => {
-            if (state.matches('complete')) {
+            if (previousState.matches('complete') && state.matches('closed')) {
               sendBack({ type: 'COMPLETE_B' });
             }
+            previousState = state;
           });
           return subscription.unsubscribe;
         })
