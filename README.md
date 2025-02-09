@@ -1,50 +1,126 @@
-# React + TypeScript + Vite
+# React + XState デモプロジェクト
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+このプロジェクトは、ReactとXStateを使用して、複雑なUIの状態遷移を管理する方法を示すデモンストレーションです。
 
-Currently, two official plugins are available:
+## 概要
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+このプロジェクトでは、ツアー機能を例に取り、以下の点を実証しています：
 
-## Expanding the ESLint configuration
+- 複数のコンポーネント間での状態管理
+- 状態遷移の可視化と制御
+- コンポーネント間の連携
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## アーキテクチャ
 
-- Configure the top-level `parserOptions` property like this:
+### 1. ツアーマシン（Tour State Machine）
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+メインのステートマシンで、全体のフローを制御します：
+
+```typescript
+interface TourContext {
+  componentA: AnyActorRef | null;
+  componentB: AnyActorRef | null;
+  componentAComplete: boolean;
+  componentBComplete: boolean;
+  isTourActive: boolean;
+}
+
+type TourEvent =
+  | { type: 'START' }
+  | { type: 'COMPLETE_A' }
+  | { type: 'COMPLETE_B' }
+  | { type: 'RESET' };
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### 2. 状態遷移フロー
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+1. **初期状態（idle）**
+   - ツアーが開始されていない状態
+   - `START`イベントでツアーを開始
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+2. **ComponentA**
+   - ComponentAのダイアログを表示
+   - ダイアログが完了状態から閉じられると次のステップへ
+
+3. **ComponentB**
+   - ComponentBのダイアログを表示
+   - ダイアログが完了状態から閉じられると初期状態へ戻る
+
+### 3. 状態遷移の検知
+
+特に注目すべき点として、状態遷移の検知方法があります：
+
+```typescript
+invoke: {
+  id: 'dialogBSubscription',
+  src: fromCallback(({ sendBack }) => {
+    let previousState = dialogActorB.getSnapshot();
+    const subscription = dialogActorB.subscribe((state) => {
+      if (previousState.matches('complete') && state.matches('closed')) {
+        sendBack({ type: 'COMPLETE_B' });
+      }
+      previousState = state;
+    });
+    return subscription.unsubscribe;
+  })
+}
 ```
+
+この実装により：
+- 前の状態が`complete`
+- 現在の状態が`closed`
+という遷移を正確に検知できます。
+
+## セットアップ
+
+```bash
+# 依存関係のインストール
+npm install
+
+# 開発サーバーの起動
+npm run dev
+```
+
+## 主要なファイル構成
+
+```
+src/
+├── features/
+│   ├── Tour/
+│   │   ├── tourMachine.ts    # メインのステートマシン
+│   │   └── TourComponent.tsx # ツアーのUIコンポーネント
+│   ├── A/
+│   │   └── ...              # ComponentA関連のファイル
+│   └── B/
+│       └── ...              # ComponentB関連のファイル
+```
+
+## 技術スタック
+
+- React
+- XState v5
+- TypeScript
+
+## 学習ポイント
+
+1. **状態管理の集中化**
+   - XStateによる状態遷移の一元管理
+   - 複雑なUIフローの可視化
+
+2. **型安全性**
+   - TypeScriptによる型定義
+   - コンパイル時のエラー検知
+
+3. **コンポーネント間の疎結合**
+   - ステートマシンを介した状態共有
+   - イベントベースの通信
+
+4. **デバッグのしやすさ**
+   - XState Inspectorによる状態遷移の可視化
+   - 予測可能な状態遷移
+
+## 今後の展開
+
+- テストケースの追加
+- より複雑なフローへの対応
+- パフォーマンス最適化
