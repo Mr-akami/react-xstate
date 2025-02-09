@@ -1,43 +1,33 @@
 // useTour.ts
-import { useMachine, useSelector } from '@xstate/react';
+import { useMachine } from '@xstate/react';
 import { useEffect } from 'react';
 import { tourMachine } from './tourMachine';
-import { dialogActor } from '../A/useDialogA';
-import { dialogActorB } from '../B/useDialogB';
 
 export const useTour = () => {
   const [state, send] = useMachine(tourMachine);
 
-  // ダイアログAおよびBの状態をそれぞれ監視する
-  const isDialogAComplete = useSelector(dialogActor, (dialogState) => dialogState.matches('complete'));
-  const isDialogBComplete = useSelector(dialogActorB, (dialogState) => dialogState.matches('complete'));
+  // 状態やコンテキストを分かりやすく分解
+  const isInComponentA = state.matches('componentA');
+  const isInComponentB = state.matches('componentB');
+  const componentARef = state.context.componentA;
+  const componentBRef = state.context.componentB;
 
-  // ダイアログAが完了していて、かつツアーが ComponentA 状態にある場合に COMPLETE_A イベントを送信
-  useEffect(() => {
-    if (isDialogAComplete && state.matches('componentA')) {
-      send({ type: 'COMPLETE_A' });
-    }
-  }, [isDialogAComplete, state, send]);
 
-  // ダイアログBが完了していて、かつツアーが ComponentB 状態にある場合に COMPLETE_B イベントを送信
+  // ツアーが ComponentA 状態になったときにダイアログAを OPEN する
   useEffect(() => {
-    if (isDialogBComplete && state.matches('componentB')) {
-      send({ type: 'COMPLETE_B' });
+    if (isInComponentA && componentARef) {
+      componentARef.send({ type: 'OPEN' });
     }
-  }, [isDialogBComplete, state, send]);
+  }, [isInComponentA, componentARef]);
+
+  // ツアーが ComponentB 状態になったときにダイアログBを OPEN する
+  useEffect(() => {
+    if (isInComponentB && componentBRef) {
+      componentBRef.send({ type: 'OPEN' });
+    }
+  }, [isInComponentB, componentBRef]);
 
   return {
-    // ツアーが idle 状態でなければツアーがアクティブ
-    isTourActive: !state.matches('idle'),
-    // ツアーマシンの現在の状態に応じたフラグ
-    isInComponentA: state.matches('componentA'),
-    isInComponentB: state.matches('componentB'),
-    // ツアー開始、完了用のイベント送信関数
     startTour: () => send({ type: 'START' }),
-    completeA: () => send({ type: 'COMPLETE_A' }),
-    completeB: () => send({ type: 'COMPLETE_B' }),
-    // ダイアログに対して操作を行うための参照（必要に応じて利用）
-    componentARef: state.context.componentA,
-    componentBRef: state.context.componentB,
   };
 };
