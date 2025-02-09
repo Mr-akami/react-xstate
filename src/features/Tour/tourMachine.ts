@@ -1,8 +1,6 @@
 import { createMachine, assign, AnyActorRef } from 'xstate';
 import { dialogActor } from '../A/useDialogA';
-import { dialogMachineB } from '../B/dialogMachineB';
 import { dialogActorB } from '../B/useDialogB';
-import { createActor } from 'xstate';
 
 interface TourContext {
   componentA: AnyActorRef | null;
@@ -49,29 +47,44 @@ export const tourMachine = createMachine({
       }
     },
     componentA: {
-      entry: assign({
-        componentA: () => dialogActor
-      }),
+      entry: [
+        assign({
+          componentA: () => dialogActor
+        }),
+        ({ self }) => {
+          dialogActor.subscribe((state) => {
+            if (state.matches('complete')) {
+              self.send({ type: 'COMPLETE_A' });
+            }
+          });
+        }
+      ],
       on: {
         COMPLETE_A: { 
           target: 'componentB', 
-          actions: assign({ componentAComplete: true }) 
+          actions: assign({ componentAComplete: true })
         }
       }
     },
     componentB: {
-      entry: assign({
-        componentB: () => dialogActorB
-      }),
+      entry: [
+        assign({
+          componentB: () => dialogActorB
+        }),
+        ({ self }) => {
+          dialogActorB.subscribe((state) => {
+            if (state.matches('complete')) {
+              self.send({ type: 'COMPLETE_B' });
+            }
+          });
+        }
+      ],
       on: {
         COMPLETE_B: { 
           target: 'idle', 
           actions: assign({ componentBComplete: true }) 
         }
       }
-    },
-    complete: {
-      target: 'idle',
     }
   }
 }); 
