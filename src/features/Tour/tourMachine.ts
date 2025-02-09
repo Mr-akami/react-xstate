@@ -47,9 +47,16 @@ export const tourMachine = createMachine({
       }
     },
     componentA: {
-      entry: assign({
-        componentA: () => dialogActorA
-      }),
+      entry: [
+        assign({
+          componentA: () => dialogActorA
+        }),
+        ({ context }: { context: TourContext }) => {
+          if (context.componentA) {
+            context.componentA.send({ type: 'OPEN' });
+          }
+        }
+      ],
       invoke: {
         id: 'dialogASubscription',
         src: fromCallback(({ sendBack }) => {
@@ -64,14 +71,21 @@ export const tourMachine = createMachine({
       on: {
         COMPLETE_A: { 
           target: 'componentB', 
-          actions: assign({ componentAComplete: true })
+          actions: assign({ componentAComplete: (_) => true })
         }
       }
     },
     componentB: {
-      entry: assign({
-        componentB: () => dialogActorB
-      }),
+      entry: [
+        assign({
+          componentB: () => dialogActorB
+        }),
+        ({ context }: { context: TourContext }) => {
+          if (context.componentB) {
+            context.componentB.send({ type: 'OPEN' });
+          }
+        }
+      ],
       invoke: {
         id: 'dialogBSubscription',
         src: fromCallback(({ sendBack }) => {
@@ -86,7 +100,7 @@ export const tourMachine = createMachine({
       on: {
         COMPLETE_B: { 
           target: 'idle', 
-          actions: assign({ componentBComplete: true }) 
+          actions: assign({ componentBComplete: (_) => true }) 
         }
       }
     }
