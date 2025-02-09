@@ -1,7 +1,7 @@
 import { createMachine, assign, AnyActorRef } from 'xstate';
 import { dialogMachineA } from '../A/dialogMachineA';
 import { dialogMachineB } from '../B/dialogMachineB';
-import { simpleDialogMachineB } from '../B/simpleDialogMachineB';
+import { createActor } from 'xstate';
 
 interface TourContext {
   componentA: AnyActorRef | null;
@@ -17,6 +17,10 @@ type TourEvent =
   | { type: 'COMPLETE_B' };
 
 export const tourMachine = createMachine({
+  types: {} as {
+    context: TourContext;
+    events: TourEvent;
+  },
   id: 'tour',
   initial: 'idle',
   context: {
@@ -37,7 +41,7 @@ export const tourMachine = createMachine({
     },
     componentA: {
       entry: assign({
-        componentA: () => dialogMachineA.provide()
+        componentA: () => createActor(dialogMachineA).start()
       }),
       on: {
         COMPLETE_A: { 
@@ -47,10 +51,8 @@ export const tourMachine = createMachine({
       }
     },
     componentB: {
-      entry: assign((context) => ({
-        componentB: context.isTourActive
-          ? simpleDialogMachineB.provide()
-          : dialogMachineB.provide()
+      entry: assign(() => ({
+        componentB: createActor(dialogMachineB).start()
       })),
       on: {
         COMPLETE_B: { 
@@ -64,4 +66,4 @@ export const tourMachine = createMachine({
       entry: assign({ isTourActive: false })
     }
   }
-} satisfies import('xstate').StateMachine<TourContext, any, TourEvent>); 
+}); 
