@@ -1,29 +1,37 @@
-import { useMachine } from '@xstate/react';
+import { useSelector } from '@xstate/react';
 import { useAtom } from 'jotai';
 import { dialogMachineA } from './dialogMachineA';
 import { componentATotalAtom } from '../Tour/atoms';
+import { createActor } from 'xstate';
+
+export const dialogActor = createActor(dialogMachineA).start();
 
 export const useDialogA = () => {
-  const [state, send] = useMachine(dialogMachineA, {});
   const [totalA, setTotalA] = useAtom(componentATotalAtom);
 
+  const isOpen = useSelector(dialogActor, state => state.matches('open'));
+  const isComplete = useSelector(dialogActor, state => state.matches('complete'));
+  const count = useSelector(dialogActor, state => state.context.count);
+  const currentTotal = useSelector(dialogActor, state => state.context.total);
+  
+
   const handleSelect = (value: number) => {
-    send({ type: 'SELECT', value });
+    dialogActor.send({ type: 'SELECT', value });
   };
 
   const handleSave = () => {
-    setTotalA(state.context.total);
-    send({ type: 'RESET' });
+    setTotalA(currentTotal);
+    dialogActor.send({ type: 'RESET' });
   };
 
   return {
-    isOpen: state.matches('open'),
-    isComplete: state.matches('complete'),
+    isOpen,
+    isComplete,
     handleSelect,
     handleSave,
-    openDialog: () => send({ type: 'OPEN' }),
+    openDialog: () => dialogActor.send({ type: 'OPEN' }),
     total: totalA,
-    count: state.context.count,
-    currentTotal: state.context.total
+    count,
+    currentTotal
   };
 }; 

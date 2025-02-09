@@ -1,6 +1,7 @@
 import { createMachine, assign, AnyActorRef } from 'xstate';
-import { dialogMachineA } from '../A/dialogMachineA';
+import { dialogActor } from '../A/useDialogA';
 import { dialogMachineB } from '../B/dialogMachineB';
+import { dialogActorB } from '../B/useDialogB';
 import { createActor } from 'xstate';
 
 interface TourContext {
@@ -14,7 +15,8 @@ interface TourContext {
 type TourEvent =
   | { type: 'START' }
   | { type: 'COMPLETE_A' }
-  | { type: 'COMPLETE_B' };
+  | { type: 'COMPLETE_B' }
+  | { type: 'RESET' };
 
 export const tourMachine = createMachine({
   types: {} as {
@@ -32,6 +34,13 @@ export const tourMachine = createMachine({
   },
   states: {
     idle: {
+      entry: assign({
+        componentA: null,
+        componentB: null,
+        componentAComplete: false,
+        componentBComplete: false,
+        isTourActive: false
+      }),
       on: { 
         START: { 
           target: 'componentA', 
@@ -41,7 +50,7 @@ export const tourMachine = createMachine({
     },
     componentA: {
       entry: assign({
-        componentA: () => createActor(dialogMachineA).start()
+        componentA: () => dialogActor
       }),
       on: {
         COMPLETE_A: { 
@@ -51,19 +60,18 @@ export const tourMachine = createMachine({
       }
     },
     componentB: {
-      entry: assign(() => ({
-        componentB: createActor(dialogMachineB).start()
-      })),
+      entry: assign({
+        componentB: () => dialogActorB
+      }),
       on: {
         COMPLETE_B: { 
-          target: 'complete', 
+          target: 'idle', 
           actions: assign({ componentBComplete: true }) 
         }
       }
     },
     complete: {
-      type: 'final',
-      entry: assign({ isTourActive: false })
+      target: 'idle',
     }
   }
 }); 
