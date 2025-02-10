@@ -1,10 +1,9 @@
 import { useSelector } from '@xstate/react';
 import { useAtom } from 'jotai';
-import { dialogMachineB } from './dialogMachineB';
+import { dialogActorB } from './dialogMachineB';
 import { componentBTotalAtom } from '../Tour/atoms';
-import { createActor } from 'xstate';
 
-export const dialogActorB = createActor(dialogMachineB).start();
+
 
 export const useDialogB = () => {
   const [totalB, setTotalB] = useAtom(componentBTotalAtom);

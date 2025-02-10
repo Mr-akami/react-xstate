@@ -1,4 +1,4 @@
-import { createMachine, assign } from 'xstate';
+import { createMachine, assign, createActor } from 'xstate';
 
 
 export const dialogMachineA = createMachine({
@@ -54,3 +54,5 @@ export const dialogMachineA = createMachine({
     }
   }
 });
+
+export const dialogActorA = createActor(dialogMachineA).start();

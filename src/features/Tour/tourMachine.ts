@@ -10,6 +10,11 @@ interface TourContext {
   isTourActive: boolean;
 }
 
+type TourState =
+  | { value: 'idle'; context: TourContext }
+  | { value: 'componentA'; context: TourContext }
+  | { value: 'componentB'; context: TourContext };
+
 type TourEvent =
   | { type: 'START' }
   | { type: 'COMPLETE_A' }
@@ -20,6 +25,7 @@ export const tourMachine = createMachine({
   types: {} as {
     context: TourContext;
     events: TourEvent;
+    states: TourState;
   },
   id: 'tour',
   initial: 'idle',
