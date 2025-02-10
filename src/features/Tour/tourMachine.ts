@@ -1,6 +1,6 @@
 import { createMachine, assign, AnyActorRef, fromCallback } from 'xstate';
-import { dialogActorA } from '../A/useDialogA';
-import { dialogActorB } from '../B/useDialogB';
+import { dialogActorA } from '../A/dialogMachineA';
+import { dialogActorB } from '../B/dialogMachineB';
 
 interface TourContext {
   componentA: AnyActorRef | null;
