@@ -14,6 +14,7 @@
     "@xstate/react": "^5.0.2",
     "cesium": "^1.128.0",
     "jotai": "^2.12.2",
+    "jotai-xstate": "^0.6.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "xstate": "^5.19.2"

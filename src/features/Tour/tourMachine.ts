@@ -77,7 +77,7 @@ export const tourMachine = createMachine({
       on: {
         COMPLETE_A: { 
           target: 'componentB', 
-          actions: assign({ componentAComplete: (_) => true })
+          actions: assign({ componentAComplete: () => true })
         }
       }
     },
@@ -108,7 +108,7 @@ export const tourMachine = createMachine({
       on: {
         COMPLETE_B: { 
           target: 'idle', 
-          actions: assign({ componentBComplete: (_) => true }) 
+          actions: assign({ componentBComplete: () => true }) 
         }
       }
     }

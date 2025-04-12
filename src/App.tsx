@@ -2,6 +2,7 @@ import React from 'react';
 import ComponentA from './features/A/ComponentA';
 import ComponentB from './features/B/ComponentB';
 import TourComponent from './features/Tour/TourComponent';
+import DragComponent from './features/Drag/DragComponent';
 import CesiumViewer from './components/CesiumViewer';
 import './App.css';
 
@@ -23,6 +24,7 @@ function App() {
           gap: '20px', 
           flexDirection: 'column'
         }}>
+          <DragComponent />
           <ComponentA />
           <ComponentB />
           <TourComponent />
