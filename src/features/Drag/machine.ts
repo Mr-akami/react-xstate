@@ -1,8 +1,9 @@
 import { createMachine, assign } from 'xstate';
 import type { DragState } from './atoms';
 import * as Cesium from 'cesium';
-
-let cleanupListenersFunction: (() => void) | null = null;
+import { getCurrentViewer } from '../../atoms/viewerAtoms';
+import { rectangleRendererAtom } from '../../atoms/rectangleAtoms';
+import { store } from '../../atoms/rectangleAtoms';
 
 // ドラッグマシンのコンテキスト型
 export interface DragContext {
@@ -25,8 +26,38 @@ export interface DragContext {
 export type DragEvents = 
   | { type: 'START_DRAG'; position: { x: number; y: number }; elementPosition: { x: number; y: number } }
   | { type: 'MOVE'; position: { x: number; y: number } }
-  | { type: 'END_DRAG' }
-  | { type: 'INITIALIZE_VIEWER'; viewer: Cesium.Viewer };
+  | { type: 'END_DRAG' };
+
+/**
+ * Rectangleのドラッグハンドラーを設定する
+ */
+function setupRectangleDragHandler(): (() => void) | undefined {
+  const viewer = getCurrentViewer();
+  if (!viewer) {
+    console.warn('Viewerが初期化されていないため、Rectangleドラッグハンドラーを設定できません');
+    return;
+  }
+
+  // レンダラーを取得する前にstoreの内容を確認
+  console.log('store内のrendererを確認:', 
+    store.get(rectangleRendererAtom) ? 'renderer存在' : 'renderer未存在', 
+    store.get(rectangleRendererAtom)
+  );
+  
+  const renderer = store.get(rectangleRendererAtom);
+  if (!renderer) {
+    console.warn('RectangleRendererが初期化されていないため、Rectangleドラッグハンドラーを設定できません');
+    return;
+  }
+
+  console.log('ドラッグハンドラーを設定します', renderer);
+  const dragHandler = renderer.makeDraggable(
+    () => console.log('ドラッグハンドラー: ドラッグ開始'),
+    (pos) => console.log('ドラッグハンドラー: ドラッグ中', pos),
+    () => console.log('ドラッグハンドラー: ドラッグ終了')
+  );
+  return dragHandler;
+}
 
 
 /**
@@ -59,12 +90,14 @@ export const createDragMachine = (initialState: DragState) => createMachine({
     position: initialState.position,
     startPosition: { x: 0, y: 0 },
     offset: { x: 0, y: 0 },
-    viewer: null
+    viewer: null,
+    handler: () => {}
   },
   states: {
     idle: {
       entry: () => {
         console.log('ドラッグ状態: OFF');
+        // ドラッグ終了時にRectangleのドラッグハンドラーがまだ残っている場合は解除
       },
       on: {
         START_DRAG: {
@@ -73,9 +106,11 @@ export const createDragMachine = (initialState: DragState) => createMachine({
             ({ event, context }) => {
               console.log('ドラッグ開始イベント受信:', event);
               
-
-              // ここではドラッグリスナーは設定しない
-              // リスナーはRectangleRendererの中ですでに設定されているため
+              // Rectangleのドラッグハンドラーを設定
+              const handler = setupRectangleDragHandler();
+              if (handler) {
+                context.handler = handler;
+              }
             },
             assign({
               position: ({ event }) => {
@@ -99,23 +134,17 @@ export const createDragMachine = (initialState: DragState) => createMachine({
       entry: () => {
         console.log('ドラッグ状態: ON');
         
-        // ドラッグ機能を有効化
-       
+        // ドラッグ機能を有効化 (既にSTART_DRAGで設定済み)
       },
-      exit: () => {
+      exit: ({ context }) => {
         // ドラッグリスナーをクリーンアップ
-        // if (cleanupListenersFunction) {
-        //   console.log('ドラッグリスナーをクリーンアップ');
-        //   cleanupListenersFunction();
-        //   cleanupListenersFunction = null;
-        // }
+        context.handler();  
       },
       on: {
         MOVE: {
           actions: [
             ({ event }) => {
               console.log('移動イベント:', event.position);
-              
             },
             assign({
               position: ({ context, event }) => {

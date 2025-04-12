@@ -38,11 +38,6 @@ const CesiumViewer: React.FC = () => {
     viewerStore.set(cesiumViewerAtom, cesiumViewer);
     console.log('Cesium Viewerが初期化されました');
 
-    // ステートマシンにviewerを初期化するイベントを送信
-    sendDragEvent({
-      type: 'INITIALIZE_VIEWER',
-      viewer: cesiumViewer
-    });
 
     return () => {
       if (cesiumViewer) {

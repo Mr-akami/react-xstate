@@ -32,6 +32,7 @@ export const setRectangleState = atom(null, (get, set, update: Partial<Rectangle
   set(rectangleStateAtom, { ...get(rectangleStateAtom), ...update });
 });
 export const rectangleEntityAtom = atom<Cesium.Entity | null>(null);
+export const rectangleRendererAtom = atom<RectangleRenderer | null>(null);
 export const toggleRectangleAtom = atom(
   // ゲッター - エンティティの有無を返す
   (get) => get(rectangleEntityAtom) !== null,
@@ -57,23 +58,37 @@ export const toggleRectangleAtom = atom(
         // Viewerが既に初期化されている場合は直接作成
         console.log('Rectangleを作成します（Viewerが既に初期化済み）');
         const state = get(rectangleStateAtom);
-        const entity = createRectangle(viewer, state);
+        const [entity, renderer] = createRectangle(viewer, state);
+        
+        // 両方のstoreとJotaiに設定
         set(rectangleEntityAtom, entity);
+        set(rectangleRendererAtom, renderer);
+        store.set(rectangleRendererAtom, renderer);
+        
+        console.log('Rectangleを作成しました', entity, renderer);
+        console.log('store内のrenderer確認:', store.get(rectangleRendererAtom));
       } else {
         // Viewerの初期化を待ってから作成
         console.log('Viewerの初期化を待ちます...');
         waitForViewer((viewer) => {
           console.log('Viewerが初期化されました。Rectangleを作成します');
           const state = get(rectangleStateAtom);
-          const entity = createRectangle(viewer, state);
+          const [entity, renderer] = createRectangle(viewer, state);
+          
+          // 両方のstoreとJotaiに設定
           set(rectangleEntityAtom, entity);
+          set(rectangleRendererAtom, renderer);
+          store.set(rectangleRendererAtom, renderer);
+          
+          console.log('Rectangleを作成しました', entity, renderer);
+          console.log('store内のrenderer確認:', store.get(rectangleRendererAtom));
         });
       }
     }
   }
 );
 
-const createRectangle = (viewer: Cesium.Viewer, state: RectangleState) => {
+const createRectangle = (viewer: Cesium.Viewer, state: RectangleState): [Cesium.Entity, RectangleRenderer] => {
   const { center, width, height, rotation } = state;
   const rectangle = new Rectangle({
     center,
@@ -91,7 +106,7 @@ const createRectangle = (viewer: Cesium.Viewer, state: RectangleState) => {
       extrudedHeight: 1500
     };
   const entity = renderer.render(rectangle, defaultRenderOptions);
-  return entity;
+  return [entity, renderer];
 };
 
 const cleanupRectangle = (entity: Cesium.Entity) => {

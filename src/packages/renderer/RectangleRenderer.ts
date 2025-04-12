@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import { Rectangle } from '../geometry/Rectangle';
-import { getRectangleState, setRectangleState } from '../../atoms/rectangleAtoms';
+import {  store, rectangleStateAtom } from '../../atoms/rectangleAtoms';
 
 export interface RectangleRenderOptions {
   color?: Cesium.Color;
@@ -72,7 +72,8 @@ export class RectangleRenderer {
         this.viewer.scene.screenSpaceCameraController.enableRotate = false;
         
         // ドラッグ状態をatomに設定
-        setRectangleState({ isDragging: true });
+        const currentState = store.get(rectangleStateAtom);
+        store.set(rectangleStateAtom, {...currentState, isDragging: true});
         
         if (onDragStart) onDragStart();
       }
@@ -93,7 +94,7 @@ export class RectangleRenderer {
           );
 
           // atomから現在の状態を取得
-          const currentState = getRectangleState();
+          const currentState = store.get(rectangleStateAtom);
           
           // 現在の中心位置に移動量を加算
           const newCenter = Cesium.Cartesian3.add(
@@ -103,7 +104,8 @@ export class RectangleRenderer {
           );
           
           // atomを経由して位置を更新
-          setRectangleState({
+          store.set(rectangleStateAtom, {
+            ...currentState,
             center: newCenter
           });
 
@@ -120,7 +122,8 @@ export class RectangleRenderer {
       this.viewer.scene.screenSpaceCameraController.enableRotate = true;
       
       // ドラッグ状態をatomに設定
-      setRectangleState({ isDragging: false });
+      const endState = store.get(rectangleStateAtom);
+      store.set(rectangleStateAtom, {...endState, isDragging: false});
       
       if (onDragEnd) onDragEnd();
     }, Cesium.ScreenSpaceEventType.LEFT_UP);
