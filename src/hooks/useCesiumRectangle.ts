@@ -13,8 +13,8 @@ interface UseCesiumRectangleOptions {
     height?: number;
     extrudedHeight?: number;
   };
-  onDragStart?: () => void;
-  onDrag?: () => void;
+  onDragStart?: (position: { x: number; y: number }) => void;
+  onDrag?: (position: { x: number; y: number }) => void;
   onDragEnd?: () => void;
 }
 
@@ -118,17 +118,28 @@ export const useCesiumRectangle = (viewer: Cesium.Viewer | null, options: UseCes
       const dragCleanup = renderer.makeDraggable(
         // ドラッグ開始時
         () => {
-          console.log('ドラッグ開始:', getRectangleState());
-          if (options.onDragStart) options.onDragStart();
+          const state = getRectangleState();
+          console.log('ドラッグ開始:', state);
+          const position = { 
+            x: state.center.longitude, 
+            y: state.center.latitude 
+          };
+          if (options.onDragStart) options.onDragStart(position);
         },
         // ドラッグ中
         () => {
-          console.log('ドラッグ中:', getRectangleState());
-          if (options.onDrag) options.onDrag();
+          const state = getRectangleState();
+          console.log('ドラッグ中:', state);
+          const position = { 
+            x: state.center.longitude, 
+            y: state.center.latitude 
+          };
+          if (options.onDrag) options.onDrag(position);
         },
         // ドラッグ終了時
         () => {
-          console.log('ドラッグ終了:', getRectangleState());
+          const state = getRectangleState();
+          console.log('ドラッグ終了:', state);
           if (options.onDragEnd) options.onDragEnd();
         }
       );

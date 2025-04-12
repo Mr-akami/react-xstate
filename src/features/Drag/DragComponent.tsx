@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { dragStateAtom, debugDragStateAtom, dragMachineAtom, dragSendAtom } from './atoms';
 

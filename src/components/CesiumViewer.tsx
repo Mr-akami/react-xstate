@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
-import { useCesiumRectangle } from '../hooks/useCesiumRectangle';
+import { useSetAtom } from 'jotai';
+import { dragSendAtom } from '../features/Drag/atoms';
 
 const CesiumViewer: React.FC = () => {
   const viewerRef = useRef<Cesium.Viewer | null>(null);
-  const [viewer, setViewer] = useState<Cesium.Viewer | null>(null);
+  const sendDragEvent = useSetAtom(dragSendAtom);
 
   // Cesium Viewerのセットアップ
   useEffect(() => {
@@ -31,35 +32,19 @@ const CesiumViewer: React.FC = () => {
     });
 
     viewerRef.current = cesiumViewer;
-    setViewer(cesiumViewer);
+
+    // ステートマシンにviewerを初期化するイベントを送信
+    sendDragEvent({
+      type: 'INITIALIZE_VIEWER',
+      viewer: cesiumViewer
+    });
 
     return () => {
       if (cesiumViewer) {
         cesiumViewer.destroy();
       }
     };
-  }, []);
-
-  // Rectangleのセットアップと管理
-  useCesiumRectangle(viewer, {
-    rectangleOptions: {
-      color: Cesium.Color.RED.withAlpha(0.5),
-      outline: true,
-      outlineColor: Cesium.Color.WHITE,
-      outlineWidth: 2,
-      height: 500,
-      extrudedHeight: 1500
-    },
-    onDragStart: () => {
-      console.log('ドラッグ開始イベントをコンポーネントで処理');
-    },
-    onDrag: () => {
-      console.log('ドラッグ中イベントをコンポーネントで処理');
-    },
-    onDragEnd: () => {
-      console.log('ドラッグ終了イベントをコンポーネントで処理');
-    }
-  });
+  }, [sendDragEvent]);
 
   return <div id="cesiumContainer" style={{ width: '100%', height: '100%' }} />;
 };

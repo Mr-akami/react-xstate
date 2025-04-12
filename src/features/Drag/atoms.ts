@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithMachine } from 'jotai-xstate';
-import { createDragMachine } from './machine';
+import { createDragMachine, DragEvents } from './machine';
 
 export interface DragState {
   isDragging: boolean;
@@ -26,7 +26,7 @@ export const dragMachineAtom = atomWithMachine((get) => {
 });
 
 // send機能用のアトム
-export const dragSendAtom = atom(null, (get, set, event: any) => {
+export const dragSendAtom = atom(null, (get, set, event: DragEvents) => {
   set(dragMachineAtom, event);
 });
 
@@ -84,16 +84,24 @@ export const dragStateAtom = atom(
   }
 );
 
-// デバッグ用：素のatomの値と現在のマシン状態を出力するatom
+// デバッグ用：循環参照を避けるため、JSON.stringify可能なデータのみを含める
 export const debugDragStateAtom = atom((get) => {
   const primitiveState = get(dragPrimitiveAtom);
   const machineState = get(dragMachineAtom);
+  
+  // JSON.stringify可能なプロパティのみを抽出（viewerをオプショナルとして扱う）
+  type SafeContext = Omit<typeof machineState.context, 'viewer'> & { viewer?: unknown };
+  const safeContext: SafeContext = { ...machineState.context };
+  // viewerは循環参照を引き起こすため削除
+  if ('viewer' in safeContext) {
+    delete safeContext.viewer;
+  }
   
   return {
     primitive: primitiveState,
     machine: {
       state: machineState.value,
-      context: machineState.context
+      context: safeContext
     }
   };
 }); 
