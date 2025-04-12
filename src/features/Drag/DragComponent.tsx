@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { dragStateAtom, debugDragStateAtom, dragMachineAtom, dragSendAtom } from './atoms';
+import { toggleRectangleAtom, rectangleEntityAtom } from '../../atoms/rectangleAtoms';
 
 const DragComponent: React.FC = () => {
   // ドラッグ状態のatom
@@ -11,6 +12,9 @@ const DragComponent: React.FC = () => {
   const machineState = useAtomValue(dragMachineAtom);
   // イベント送信用関数
   const sendEvent = useSetAtom(dragSendAtom);
+  // Rectangle関連
+  const [, toggleRectangle] = useAtom(toggleRectangleAtom);
+  const [rectangleEntity] = useAtom(rectangleEntityAtom);
 
   // マシンが最終状態になったときの処理
 
@@ -50,12 +54,19 @@ const DragComponent: React.FC = () => {
     });
   };
 
+  // Rectangleのトグル処理
+  const handleToggleRectangle = () => {
+    console.log('Rectangle表示状態をトグル');
+    toggleRectangle();
+  };
+
   return (
     <div style={{ padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}>
       <h3>ドラッグコンポーネント (jotai-xstate版)</h3>
       <p>ドラッグ状態: {dragState.isDragging ? 'ドラッグ中' : '停止中'}</p>
       <p>マシン状態: {String(machineState.value)}</p>
       <p>位置: X={Math.round(dragState.position.x)}, Y={Math.round(dragState.position.y)}</p>
+      <p>Rectangle: {rectangleEntity ? '表示中' : '非表示'}</p>
       
       <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
         <button 
@@ -100,6 +111,20 @@ const DragComponent: React.FC = () => {
           onClick={handleDirectEvent}
         >
           直接イベント
+        </button>
+
+        <button
+          style={{ 
+            padding: '8px 16px',
+            backgroundColor: rectangleEntity ? '#f44336' : '#2E7D32',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+          onClick={handleToggleRectangle}
+        >
+          {rectangleEntity ? 'Rectangle削除' : 'Rectangle作成'}
         </button>
       </div>
 

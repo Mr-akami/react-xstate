@@ -3,6 +3,7 @@ import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { useSetAtom } from 'jotai';
 import { dragSendAtom } from '../features/Drag/atoms';
+import { cesiumViewerAtom, viewerStore } from '../atoms/viewerAtoms';
 
 const CesiumViewer: React.FC = () => {
   const viewerRef = useRef<Cesium.Viewer | null>(null);
@@ -32,6 +33,10 @@ const CesiumViewer: React.FC = () => {
     });
 
     viewerRef.current = cesiumViewer;
+    
+    // atomにViewerを設定
+    viewerStore.set(cesiumViewerAtom, cesiumViewer);
+    console.log('Cesium Viewerが初期化されました');
 
     // ステートマシンにviewerを初期化するイベントを送信
     sendDragEvent({
@@ -41,6 +46,8 @@ const CesiumViewer: React.FC = () => {
 
     return () => {
       if (cesiumViewer) {
+        // クリーンアップ時にatomをnullに設定
+        viewerStore.set(cesiumViewerAtom, null);
         cesiumViewer.destroy();
       }
     };
