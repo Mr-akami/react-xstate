@@ -1,57 +1,67 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
+import { useCesiumRectangle } from '../hooks/useCesiumRectangle';
 
 const CesiumViewer: React.FC = () => {
-  const cesiumContainer = useRef<HTMLDivElement>(null);
-  const viewer = useRef<Cesium.Viewer | null>(null);
+  const viewerRef = useRef<Cesium.Viewer | null>(null);
+  const [viewer, setViewer] = useState<Cesium.Viewer | null>(null);
 
+  // Cesium Viewerのセットアップ
   useEffect(() => {
-    let mounted = true;
+    // Viewerの初期化
+    const cesiumViewer = new Cesium.Viewer('cesiumContainer', {
+      baseLayerPicker: false,
+      timeline: false,
+      animation: false,
+      geocoder: false,
+      homeButton: false,
+      sceneModePicker: false,
+      navigationHelpButton: false,
+      fullscreenButton: false
+    });
 
-    const initViewer = async () => {
-      if (cesiumContainer.current && !viewer.current) {
-        const terrainProvider = await Cesium.createWorldTerrainAsync();
-        
-        if (!mounted) return;
+    // 地球を表示するための設定
+    cesiumViewer.scene.globe.enableLighting = false;
+    cesiumViewer.scene.globe.showGroundAtmosphere = true;
 
-        viewer.current = new Cesium.Viewer(cesiumContainer.current, {
-          terrainProvider,
-          animation: false,
-          baseLayerPicker: false,
-          fullscreenButton: false,
-          geocoder: false,
-          homeButton: false,
-          infoBox: false,
-          sceneModePicker: false,
-          selectionIndicator: false,
-          timeline: false,
-          navigationHelpButton: false,
-        });
-      }
-    };
+    // カメラを東京付近に移動
+    cesiumViewer.camera.setView({
+      destination: Cesium.Cartesian3.fromDegrees(139.7670, 35.6814, 10000)
+    });
 
-    initViewer().catch(console.error);
+    viewerRef.current = cesiumViewer;
+    setViewer(cesiumViewer);
 
     return () => {
-      mounted = false;
-      if (viewer.current) {
-        viewer.current.destroy();
-        viewer.current = null;
+      if (cesiumViewer) {
+        cesiumViewer.destroy();
       }
     };
   }, []);
 
-  return (
-    <div 
-      ref={cesiumContainer} 
-      style={{ 
-        width: '100%', 
-        height: '100%',
-        position: 'relative'
-      }} 
-    />
-  );
+  // Rectangleのセットアップと管理
+  useCesiumRectangle(viewer, {
+    rectangleOptions: {
+      color: Cesium.Color.RED.withAlpha(0.5),
+      outline: true,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      height: 500,
+      extrudedHeight: 1500
+    },
+    onDragStart: () => {
+      console.log('ドラッグ開始イベントをコンポーネントで処理');
+    },
+    onDrag: () => {
+      console.log('ドラッグ中イベントをコンポーネントで処理');
+    },
+    onDragEnd: () => {
+      console.log('ドラッグ終了イベントをコンポーネントで処理');
+    }
+  });
+
+  return <div id="cesiumContainer" style={{ width: '100%', height: '100%' }} />;
 };
 
 export default CesiumViewer; 

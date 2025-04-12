@@ -13,7 +13,7 @@ function App() {
       height: '100vh'
     }}>
       <div style={{ 
-        flex: 1, 
+        width: '40%',
         padding: '20px',
         borderRight: '1px solid #ccc',
         overflow: 'auto'
@@ -29,7 +29,7 @@ function App() {
         </div>
       </div>
       <div style={{ 
-        flex: 1,
+        width: '60%',
         position: 'relative'
       }}>
         <CesiumViewer />
